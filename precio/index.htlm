@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Consultar Precio</title>
+<style>
+body { font-family: Arial; text-align: center; padding: 30px; }
+button { padding: 10px 20px; font-size: 16px; }
+</style>
+</head>
+
+<body>
+
+<h2>Consultar Precio</h2>
+
+<p id="producto"></p>
+
+<label>
+  <input type="radio" name="moneda" value="usd"> USD
+</label>
+<label>
+  <input type="radio" name="moneda" value="bs"> Bolívares
+</label>
+
+<br><br>
+
+<button onclick="mostrarPrecio()">Ver precio</button>
+
+<h3 id="resultado"></h3>
+
+<script>
+
+// 🔗 TU GOOGLE SHEETS (YA CORRECTO)
+const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbLJloV0tSRZTCNZs-3dvpZo8dzp6CWA2s10MuW0pRAkJ4ENd4139uoXj_tw5f8pQQdYGpRAuyZzmf/pub?gid=0&single=true&output=csv";
+
+// 🔍 Obtener código desde QR
+const params = new URLSearchParams(window.location.search);
+const codigo = params.get("codigo");
+
+document.getElementById("producto").innerText = "Producto: " + codigo;
+
+// 💲 Obtener tasa BCV automática
+async function obtenerDolar() {
+  try {
+    const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+    const data = await res.json();
+    return data.rates.VES;
+  } catch {
+    return 40; // fallback
+  }
+}
+
+// 📊 Leer Google Sheets
+async function obtenerDatos() {
+  const res = await fetch(urlCSV);
+  const data = await res.text();
+  const filas = data.split("\n");
+
+  let recargo = 1.15;
+  let precioUSD = null;
+
+  for (let fila of filas) {
+    const [col1, col2] = fila.split(",");
+
+    if (col1 === "recargo") {
+      recargo = parseFloat(col2);
+    }
+
+    if (col1 === codigo) {
+      precioUSD = parseFloat(col2);
+    }
+  }
+
+  return { precioUSD, recargo };
+}
+
+// 💰 Mostrar precio
+async function mostrarPrecio() {
+
+  const { precioUSD, recargo } = await obtenerDatos();
+  const tasa = await obtenerDolar();
+
+  if(!precioUSD){
+    document.getElementById("resultado").innerText = "Producto no encontrado";
+    return;
+  }
+
+  const moneda = document.querySelector('input[name="moneda"]:checked');
+
+  if(!moneda){
+    alert("Seleccione una opción");
+    return;
+  }
+
+  if(moneda.value === "usd") {
+    document.getElementById("resultado").innerText =
+      "💵 USD: $" + precioUSD;
+  } else {
+    const precioBs = precioUSD * recargo * tasa;
+
+    document.getElementById("resultado").innerText =
+      "🇻🇪 Bs: " + Math.round(precioBs).toLocaleString() +
+      " (BCV: " + Math.round(tasa) + ")";
+  }
+}
+
+</script>
+
+</body>
+</html>
