@@ -24,15 +24,18 @@ button { padding: 10px 20px; font-size: 16px; }
 
 <br><br>
 
-<button onclick="mostrarPrecio()">Ver precio</button>
+<label>Área (m²):</label><br>
+<input type="number" id="areaInput" placeholder="Ej: 12" min="1">
 
-<h3 id="resultado"></h3>
+<br><br>
+
+<button onclick="mostrarPrecio()">Ver precio</button>
 
 <script>
 
 // 🔹 CONFIG
 const numeroWhatsApp = "584129578184";
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1pmgX0wJePlOt3IRyiUPF5uybRCQaewLMVbeSQDi0Ci4/gviz/tq?tqx=out:json&sheet=Calculadora";
+const API_URL = "https://script.google.com/macros/s/AKfycbz6nkaIl3O7FOy2-qs2mZ24nRjrp5iPPaz25nAfvDLiU5UEwEKv8zgvPQ5mjhMuOfXO7w/exec";
 
 // 🔹 VARIABLES GLOBALES (cache)
 let datosCache = null;
@@ -54,35 +57,14 @@ function esMovil() {
 // 🔹 Obtener datos con cache
 async function obtenerDatos() {
 
-  const ahora = Date.now();
-
-  if (datosCache && (ahora - ultimaActualizacion < CACHE_TIME)) {
-    return datosCache;
-  }
-
   try {
-    const res = await fetch(SHEET_URL);
-    const text = await res.text();
-    const json = JSON.parse(text.substr(47).slice(0, -2));
-    const rows = json.table.rows;
+    const res = await fetch(`${API_URL}?codigo=${codigoQR}`);
+    const data = await res.json();
 
-    datosCache = {
-      codigo: rows[1]?.c[1]?.v,
-      area: rows[2]?.c[1]?.v,
-      cobertura: rows[8]?.c[1]?.v,
-      cantidad: rows[9]?.c[1]?.v,
-      precioUSD: rows[6]?.c[1]?.v,
-      precioBS: rows[7]?.c[1]?.v,
-      totalUSD: rows[11]?.c[1]?.v,
-      totalBS: rows[12]?.c[1]?.v
-    };
-
-    ultimaActualizacion = ahora;
-
-    return datosCache;
+    return data;
 
   } catch (error) {
-    console.error("Error obteniendo datos:", error);
+    console.error("Error:", error);
     return null;
   }
 }
