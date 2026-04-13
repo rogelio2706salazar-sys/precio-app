@@ -70,7 +70,7 @@ async function mostrarPrecio() {
 
   const data = await obtenerDatos();
 
-  if (!data || !data.codigo) {
+  if (!data || data.error) {
     document.getElementById("resultado").innerText = "Producto no encontrado";
     return;
   }
@@ -87,10 +87,9 @@ async function mostrarPrecio() {
       "💵 USD: $" + data.precioUSD;
   } else {
     document.getElementById("resultado").innerText =
-      "🇻🇪 Bs: " + data.precioBS;
+      "🇻🇪 Bs: " + Math.round(data.precioBS).toLocaleString();
   }
 }
-
 // 🔹 Generar mensaje WhatsApp
 function generarMensaje(d, nombre) {
 
