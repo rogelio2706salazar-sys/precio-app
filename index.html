@@ -30,79 +30,150 @@ button { padding: 10px 20px; font-size: 16px; }
 
 <script>
 
-// 🔗 TU GOOGLE SHEETS (YA CORRECTO)
-const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbLJloV0tSRZTCNZs-3dvpZo8dzp6CWA2s10MuW0pRAkJ4ENd4139uoXj_tw5f8pQQdYGpRAuyZzmf/pub?gid=0&single=true&output=csv";
+// 🔹 CONFIG
+const numeroWhatsApp = "584129578184";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1pmgX0wJePlOt3IRyiUPF5uybRCQaewLMVbeSQDi0Ci4/gviz/tq?tqx=out:json&sheet=Calculadora";
 
-// 🔍 Obtener código desde QR
+// 🔹 VARIABLES GLOBALES (cache)
+let datosCache = null;
+let ultimaActualizacion = 0;
+const CACHE_TIME = 5000;
+
+// 🔹 Obtener código QR
 const params = new URLSearchParams(window.location.search);
-const codigo = params.get("codigo");
+const codigoQR = params.get("codigo");
 
-document.getElementById("producto").innerText = "Producto: " + codigo;
+// 🔹 Mostrar código
+document.getElementById("producto").innerText = "Producto: " + (codigoQR || "N/A");
 
-// 💲 Obtener tasa BCV automática
-async function obtenerDolar() {
-  try {
-    const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
-    const data = await res.json();
-    return data.rates.VES;
-  } catch {
-    return 40; // fallback
-  }
+// 🔹 Detectar móvil
+function esMovil() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// 📊 Leer Google Sheets
+// 🔹 Obtener datos con cache
 async function obtenerDatos() {
-  const res = await fetch(urlCSV);
-  const data = await res.text();
-  const filas = data.split("\n");
 
-  let recargo = 1.15;
-  let precioUSD = null;
+  const ahora = Date.now();
 
-  for (let fila of filas) {
-    const [col1, col2] = fila.split(",");
-
-    if (col1 === "recargo") {
-      recargo = parseFloat(col2);
-    }
-
-    if (col1 === codigo) {
-      precioUSD = parseFloat(col2);
-    }
+  if (datosCache && (ahora - ultimaActualizacion < CACHE_TIME)) {
+    return datosCache;
   }
 
-  return { precioUSD, recargo };
+  try {
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
+    const json = JSON.parse(text.substr(47).slice(0, -2));
+    const rows = json.table.rows;
+
+    datosCache = {
+      codigo: rows[1]?.c[1]?.v,
+      area: rows[2]?.c[1]?.v,
+      cobertura: rows[8]?.c[1]?.v,
+      cantidad: rows[9]?.c[1]?.v,
+      precioUSD: rows[6]?.c[1]?.v,
+      precioBS: rows[7]?.c[1]?.v,
+      totalUSD: rows[11]?.c[1]?.v,
+      totalBS: rows[12]?.c[1]?.v
+    };
+
+    ultimaActualizacion = ahora;
+
+    return datosCache;
+
+  } catch (error) {
+    console.error("Error obteniendo datos:", error);
+    return null;
+  }
 }
 
-// 💰 Mostrar precio
+// 🔹 Mostrar precio
 async function mostrarPrecio() {
 
-  const { precioUSD, recargo } = await obtenerDatos();
-  const tasa = await obtenerDolar();
+  const data = await obtenerDatos();
 
-  if(!precioUSD){
+  if (!data || !data.codigo) {
     document.getElementById("resultado").innerText = "Producto no encontrado";
     return;
   }
 
   const moneda = document.querySelector('input[name="moneda"]:checked');
 
-  if(!moneda){
+  if (!moneda) {
     alert("Seleccione una opción");
     return;
   }
 
-  if(moneda.value === "usd") {
+  if (moneda.value === "usd") {
     document.getElementById("resultado").innerText =
-      "💵 USD: $" + precioUSD;
+      "💵 USD: $" + data.precioUSD;
   } else {
-    const precioBs = precioUSD * recargo * tasa;
-
     document.getElementById("resultado").innerText =
-      "🇻🇪 Bs: " + Math.round(precioBs).toLocaleString() +
-      " (BCV: " + Math.round(tasa) + ")";
+      "🇻🇪 Bs: " + data.precioBS;
   }
 }
+
+// 🔹 Generar mensaje WhatsApp
+function generarMensaje(d, nombre) {
+
+  if (esMovil()) {
+    return `Hola, soy ${nombre || "cliente"} 👋
+
+Código: ${d.codigo}
+Total: $${d.totalUSD}
+
+¿Disponibilidad?`;
+  }
+
+  return `Hola, buen día.
+
+Mi nombre es ${nombre || "cliente"}.
+
+Cotización:
+
+🔹 Código: ${d.codigo}
+🔹 Área: ${d.area} m2
+
+📦 Cantidad: ${d.cantidad}
+
+💰 Totales:
+USD: $${d.totalUSD}
+Bs: ${d.totalBS}
+
+¿Disponibilidad y entrega?`;
+}
+
+// 🔹 Botón WhatsApp
+async function activarBoton() {
+
+  const data = await obtenerDatos();
+  const boton = document.getElementById("btnWhatsAppFloat");
+  const nombreInput = document.getElementById("nombreCliente");
+
+  if (!boton) return;
+
+  const nombre = nombreInput ? nombreInput.value.trim() : "";
+
+  if (!data || !data.codigo || !data.area) {
+    boton.classList.add("hidden");
+    return;
+  }
+
+  const mensaje = generarMensaje(data, nombre);
+  const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+  boton.href = link;
+  boton.classList.remove("hidden");
+}
+
+// 🔹 Inicialización
+document.addEventListener("DOMContentLoaded", () => {
+  activarBoton();
+});
+
+// 🔹 Actualización periódica
+setInterval(activarBoton, 5000);
+
 
 </script>
 
