@@ -170,7 +170,8 @@ Bs: ${data.totalBS}
 ¿Disponibilidad y entrega?`;
 }
 
-// 🔹 Botón WhatsAppasync function activarBoton() {
+// 🔹 Botón WhatsApp
+  async function activarBoton() {
 
   const data = await obtenerDatos();
   const boton = document.getElementById("btnWhatsAppFloat");
@@ -203,10 +204,7 @@ Bs: ${data.totalBS}
   boton.classList.remove("hidden");
 }
 
-// 🔹 Inicialización
-document.addEventListener("DOMContentLoaded", () => {
-  activarBoton();
-});
+
 
 // 🔹 Actualización periódica
 document.addEventListener("change", activarBoton);
