@@ -6,6 +6,30 @@
 <style>
 body { font-family: Arial; text-align: center; padding: 30px; }
 button { padding: 10px 20px; font-size: 16px; }
+  #btnWhatsAppFloat {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #25D366;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  animation: latido 1.5s infinite;
+  z-index: 999;
+}
+
+.hidden {
+  display: none;
+}
+
+@keyframes latido {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
 </style>
 </head>
 
@@ -26,6 +50,9 @@ button { padding: 10px 20px; font-size: 16px; }
 <br><br>
 
 <button onclick="mostrarPrecio()">Ver precio</button>
+  <a id="btnWhatsAppFloat" target="_blank" class="hidden">
+  💬 Consultar por WhatsApp
+</a>
   <br><br>
 <h3 id="resultado"></h3>
 
@@ -69,7 +96,9 @@ async function obtenerDatos() {
 
 // 🔹 Mostrar precio
 async function mostrarPrecio() {
-document.getElementById("resultado").innerText = "⏳ Consultando...";
+
+  document.getElementById("resultado").innerText = "⏳ Consultando...";
+
   const data = await obtenerDatos();
 
   if (!data || data.error) {
@@ -91,39 +120,57 @@ document.getElementById("resultado").innerText = "⏳ Consultando...";
     document.getElementById("resultado").innerText =
       "🇻🇪 Bs: " + Math.round(data.precioBS).toLocaleString();
   }
+
+  // 🔥 Activar botón WhatsApp
+  activarBoton();
 }
 // 🔹 Generar mensaje WhatsApp
-function generarMensaje(d, nombre) {
+function generarMensaje(data, moneda, nombre = "") {
 
-  if (esMovil()) {
-    return `Hola, soy ${nombre || "cliente"} 👋
+  // 🔹 MODO PRODUCTO (QR individual)
+  if (!data.area) {
 
-Código: ${d.codigo}
-Total: $${d.totalUSD}
+    if (moneda === "usd") {
+      return `Hola, buen día.
+
+Estoy interesado en el producto:
+
+🔹 Código: ${data.codigo}
+💵 Precio: $${data.precioUSD}
+
+¿Disponibilidad?`;
+    }
+
+    return `Hola, buen día.
+
+Estoy interesado en el producto:
+
+🔹 Código: ${data.codigo}
+🇻🇪 Precio: ${Math.round(data.precioBS).toLocaleString()} Bs
 
 ¿Disponibilidad?`;
   }
 
+  // 🔹 MODO CALCULADORA (QR único)
   return `Hola, buen día.
 
 Mi nombre es ${nombre || "cliente"}.
 
 Cotización:
 
-🔹 Código: ${d.codigo}
-🔹 Área: ${d.area} m2
+🔹 Código: ${data.codigo}
+🔹 Área: ${data.area} m2
 
-📦 Cantidad: ${d.cantidad}
+📦 Cantidad: ${data.cantidad}
 
 💰 Totales:
-USD: $${d.totalUSD}
-Bs: ${d.totalBS}
+USD: $${data.totalUSD}
+Bs: ${data.totalBS}
 
 ¿Disponibilidad y entrega?`;
 }
 
-// 🔹 Botón WhatsApp
-async function activarBoton() {
+// 🔹 Botón WhatsAppasync function activarBoton() {
 
   const data = await obtenerDatos();
   const boton = document.getElementById("btnWhatsAppFloat");
@@ -133,13 +180,24 @@ async function activarBoton() {
 
   const nombre = nombreInput ? nombreInput.value.trim() : "";
 
-  if (!data || !data.codigo || !data.area) {
+  // 🔹 Validación básica
+  if (!data || data.error || !data.codigo) {
     boton.classList.add("hidden");
     return;
   }
 
-  const mensaje = generarMensaje(data, nombre);
-  const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+  // 🔹 Detectar moneda seleccionada
+  const moneda = document.querySelector('input[name="moneda"]:checked');
+
+  if (!moneda) {
+    boton.classList.add("hidden");
+    return;
+  }
+
+  // 🔹 Generar mensaje inteligente (producto o calculadora)
+  const mensaje = generarMensaje(data, moneda.value, nombre);
+
+  const link = `https://wa.me/584129578184?text=${encodeURIComponent(mensaje)}`;
 
   boton.href = link;
   boton.classList.remove("hidden");
@@ -151,7 +209,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // 🔹 Actualización periódica
-setInterval(activarBoton, 5000);
+document.addEventListener("change", activarBoton);
+document.addEventListener("DOMContentLoaded", activarBoton);
 
 
 </script>
