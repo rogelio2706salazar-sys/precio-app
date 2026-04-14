@@ -69,7 +69,7 @@ async function obtenerDatos() {
 
 // 🔹 Mostrar precio
 async function mostrarPrecio() {
-
+document.getElementById("resultado").innerText = "⏳ Consultando...";
   const data = await obtenerDatos();
 
   if (!data || data.error) {
