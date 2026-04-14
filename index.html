@@ -173,19 +173,31 @@ Bs: ${data.totalBS}
 // 🔹 Botón WhatsApp
   async function activarBoton() {
 
-  const data = await obtenerDatos();
   const boton = document.getElementById("btnWhatsAppFloat");
-  const nombreInput = document.getElementById("nombreCliente");
-
   if (!boton) return;
 
-  const nombre = nombreInput ? nombreInput.value.trim() : "";
+  const moneda = document.querySelector('input[name="moneda"]:checked');
 
-  // 🔹 Validación básica
+  // 🔥 SOLO validar moneda primero
+  if (!moneda) {
+    boton.classList.add("hidden");
+    return;
+  }
+
+  const data = await obtenerDatos();
+
   if (!data || data.error || !data.codigo) {
     boton.classList.add("hidden");
     return;
   }
+
+  const mensaje = generarMensaje(data, moneda.value);
+
+  const link = `https://wa.me/584129578184?text=${encodeURIComponent(mensaje)}`;
+
+  boton.href = link;
+  boton.classList.remove("hidden");
+}
 
   // 🔹 Detectar moneda seleccionada
   const moneda = document.querySelector('input[name="moneda"]:checked');
