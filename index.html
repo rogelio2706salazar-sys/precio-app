@@ -5,21 +5,44 @@
 <title>Consultar Precio</title>
 
 <style>
-body { font-family: Arial; text-align: center; padding: 30px; }
-button { padding: 10px 20px; font-size: 16px; }
+body { 
+  font-family: Arial; 
+  text-align: center; 
+  padding: 30px;
+  padding-bottom: 90px; /* 👈 AQUÍ */
+}
+
+button { 
+  padding: 10px 20px; 
+  font-size: 16px; 
+}
+
+/* resto de tu CSS */
+</style>
 
 #btnWhatsAppFloat {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  
   background: #25D366;
   color: white;
-  padding: 15px 20px;
-  border-radius: 50px;
+  
+  padding: 16px 25px;
+  border-radius: 40px;
+  
   text-decoration: none;
   font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  animation: latido 1.5s infinite;
+  font-size: 16px;
+  
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  
+  width: 85%;
+  max-width: 320px;
+  
+  text-align: center;
+  
   z-index: 999;
 }
 
