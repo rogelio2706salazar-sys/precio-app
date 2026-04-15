@@ -40,7 +40,7 @@ button { padding: 10px 20px; font-size: 16px; }
 <p id="producto"></p>
 
 <label>
-  <input type="radio" name="moneda" value="usd" checked>
+  <input type="radio" name="moneda" value="usd" checked> USD
 </label>
 <label>
   <input type="radio" name="moneda" value="bs"> Bolívares
@@ -244,9 +244,13 @@ Bs: ${data.totalBS}
 
 
 
-// 🔹 Actualización periódica
+// 🔹 Eventos
 document.addEventListener("change", activarBoton);
 document.addEventListener("DOMContentLoaded", activarBoton);
+
+</script>
+</body>
+</html>
 
 
 </script>
