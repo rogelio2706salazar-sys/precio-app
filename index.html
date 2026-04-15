@@ -128,8 +128,27 @@ function generarMensaje(data, moneda) {
 
   const saludo = obtenerSaludo();
 
+  // 🔹 MODO CALCULADORA
+  if (data.area && data.totalUSD) {
+    return `Hola, ${saludo} 👋
+
+Cotización:
+
+🔹 Código: ${data.codigo}
+🔹 Área: ${data.area} m²
+
+📦 Cantidad: ${data.cantidad}
+
+💰 Totales:
+USD: $${data.totalUSD}
+Bs: ${Math.round(data.totalBS).toLocaleString()}
+
+¿Disponibilidad y entrega?`;
+  }
+
+  // 🔹 MODO PRODUCTO
   if (moneda === "usd") {
-    return `Hola, ${saludo} .
+    return `Hola, ${saludo} 👋
 
 Estoy interesado en el producto:
 
@@ -139,7 +158,7 @@ Estoy interesado en el producto:
 ¿Disponibilidad?`;
   }
 
-  return `Hola, ${saludo}.
+  return `Hola, ${saludo} 👋
 
 Estoy interesado en el producto:
 
@@ -148,7 +167,6 @@ Estoy interesado en el producto:
 
 ¿Disponibilidad?`;
 }
-
 // 🔹 Mostrar precio + botón
 async function mostrarPrecio() {
 
