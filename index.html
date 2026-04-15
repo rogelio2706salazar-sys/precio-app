@@ -1,3 +1,7 @@
+<!DOCTYPE html> <html> <head> <meta charset="UTF-8"> <title>Consultar Precio</title> <style> body { font-family: Arial; text-align: center; padding: 30px; } button { padding: 10px 20px; font-size: 16px; } #btnWhatsAppFloat { position: fixed; bottom: 20px; right: 20px; background: #25D366; color: white; padding: 15px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); animation: latido 1.5s infinite; z-index: 999; } .hidden { display: none; } @keyframes latido { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } } </style> </head> <body> <h2>Consultar Precio</h2> <p id="producto"></p> <label> <input type="radio" name="moneda" value="usd" checked> USD </label> <label> <input type="radio" name="moneda" value="bs"> Bolívares </label> <br><br> <button onclick="mostrarPrecio()">Ver precio</button> <a id="btnWhatsAppFloat" target="_blank" class="hidden"> 💬 Consultar por WhatsApp </a> <br><br> <h3 id="resultado"></h3>
+
+
+
 <script>
 
 // 🔹 CONFIG
