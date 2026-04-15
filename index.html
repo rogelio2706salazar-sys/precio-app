@@ -116,10 +116,20 @@ async function obtenerDatos() {
 }
 
 // 🔹 Generar mensaje WhatsApp
+function obtenerSaludo() {
+  const hora = new Date().getHours();
+
+  if (hora < 12) return "Buenos días";
+  if (hora < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
 function generarMensaje(data, moneda) {
 
+  const saludo = obtenerSaludo();
+
   if (moneda === "usd") {
-    return `Hola, buen día.
+    return `Hola, ${saludo}.
 
 Estoy interesado en el producto:
 
@@ -129,7 +139,7 @@ Estoy interesado en el producto:
 ¿Disponibilidad?`;
   }
 
-  return `Hola, buen día.
+  return `Hola, ${saludo}.
 
 Estoy interesado en el producto:
 
