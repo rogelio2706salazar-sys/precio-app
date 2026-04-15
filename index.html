@@ -124,7 +124,24 @@ async function mostrarPrecio() {
   }
 
   // 🔥 ACTIVAR BOTÓN DIRECTAMENTE CON DATA
+  async function activarBoton() {
+
   const boton = document.getElementById("btnWhatsAppFloat");
+  if (!boton) return;
+
+  const moneda = document.querySelector('input[name="moneda"]:checked');
+
+  if (!moneda) {
+    boton.classList.add("hidden");
+    return;
+  }
+
+  const data = await obtenerDatos();
+
+  if (!data || data.error || !data.codigo) {
+    boton.classList.add("hidden");
+    return;
+  }
 
   const mensaje = generarMensaje(data, moneda.value);
 
