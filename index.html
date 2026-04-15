@@ -101,6 +101,8 @@ async function mostrarPrecio() {
 
   const data = await obtenerDatos();
 
+  console.log("DATA mostrarPrecio:", data); // 👈 DEBUG
+
   if (!data || data.error) {
     document.getElementById("resultado").innerText = "Producto no encontrado";
     return;
@@ -121,8 +123,15 @@ async function mostrarPrecio() {
       "🇻🇪 Bs: " + Math.round(data.precioBS).toLocaleString();
   }
 
-  // 🔥 Activar botón WhatsApp
-  activarBoton();
+  // 🔥 ACTIVAR BOTÓN DIRECTAMENTE CON DATA
+  const boton = document.getElementById("btnWhatsAppFloat");
+
+  const mensaje = generarMensaje(data, moneda.value);
+
+  const link = `https://wa.me/584129578184?text=${encodeURIComponent(mensaje)}`;
+
+  boton.href = link;
+  boton.classList.remove("hidden");
 }
 // 🔹 Generar mensaje WhatsApp
 function generarMensaje(data, moneda, nombre = "") {
