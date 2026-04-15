@@ -114,6 +114,13 @@ async function obtenerDatos() {
     return null;
   }
 }
+  function obtenerSaludo() {
+  const hora = new Date().getHours();
+
+  if (hora < 12) return "Buenos días";
+  if (hora < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
 
 // 🔹 Generar mensaje WhatsApp
 function generarMensaje(data, moneda) {
