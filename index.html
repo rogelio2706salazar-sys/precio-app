@@ -1,71 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Consultar Precio</title>
-<style>
-body { font-family: Arial; text-align: center; padding: 30px; }
-button { padding: 10px 20px; font-size: 16px; }
-  #btnWhatsAppFloat {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #25D366;
-  color: white;
-  padding: 15px 20px;
-  border-radius: 50px;
-  text-decoration: none;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  animation: latido 1.5s infinite;
-  z-index: 999;
-}
-
-.hidden {
-  display: none;
-}
-
-@keyframes latido {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-</style>
-</head>
-
-<body>
-
-<h2>Consultar Precio</h2>
-
-<p id="producto"></p>
-
-<label>
-  <input type="radio" name="moneda" value="usd" checked> USD
-</label>
-<label>
-  <input type="radio" name="moneda" value="bs"> Bolívares
-</label>
-
-
-<br><br>
-
-<button onclick="mostrarPrecio()">Ver precio</button>
-  <a id="btnWhatsAppFloat" target="_blank" class="hidden">
-  💬 Consultar por WhatsApp
-</a>
-  <br><br>
-<h3 id="resultado"></h3>
-
 <script>
 
 // 🔹 CONFIG
 const numeroWhatsApp = "584129578184";
 const API_URL = "https://script.google.com/macros/s/AKfycbz6nkaIl3O7FOy2-qs2mZ24nRjrp5iPPaz25nAfvDLiU5UEwEKv8zgvPQ5mjhMuOfXO7w/exec";
-
-// 🔹 VARIABLES GLOBALES (cache)
-let datosCache = null;
-let ultimaActualizacion = 0;
-const CACHE_TIME = 5000;
 
 // 🔹 Obtener código QR
 const params = new URLSearchParams(window.location.search);
@@ -74,37 +11,56 @@ const codigoQR = params.get("codigo");
 // 🔹 Mostrar código
 document.getElementById("producto").innerText = "Producto: " + (codigoQR || "N/A");
 
-// 🔹 Detectar móvil
-function esMovil() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-// 🔹 Obtener datos con cache
+// 🔹 Obtener datos
 async function obtenerDatos() {
-
   try {
     const res = await fetch(`${API_URL}?codigo=${codigoQR}`);
-    const data = await res.json();
-
-    return data;
-
+    return await res.json();
   } catch (error) {
     console.error("Error:", error);
     return null;
   }
 }
 
-// 🔹 Mostrar precio
+// 🔹 Generar mensaje WhatsApp
+function generarMensaje(data, moneda) {
+
+  if (moneda === "usd") {
+    return `Hola, buen día.
+
+Estoy interesado en el producto:
+
+🔹 Código: ${data.codigo}
+💵 Precio: $${data.precioUSD}
+
+¿Disponibilidad?`;
+  }
+
+  return `Hola, buen día.
+
+Estoy interesado en el producto:
+
+🔹 Código: ${data.codigo}
+🇻🇪 Precio: ${Math.round(data.precioBS).toLocaleString()} Bs
+
+¿Disponibilidad?`;
+}
+
+// 🔹 Mostrar precio + activar botón
 async function mostrarPrecio() {
 
-  document.getElementById("resultado").innerText = "⏳ Consultando...";
+  const resultado = document.getElementById("resultado");
+  const boton = document.getElementById("btnWhatsAppFloat");
+
+  resultado.innerText = "⏳ Consultando...";
 
   const data = await obtenerDatos();
 
-  console.log("DATA mostrarPrecio:", data); // 👈 DEBUG
+  console.log("DATA:", data);
 
   if (!data || data.error) {
-    document.getElementById("resultado").innerText = "Producto no encontrado";
+    resultado.innerText = "Producto no encontrado";
+    boton.classList.add("hidden");
     return;
   }
 
@@ -116,144 +72,17 @@ async function mostrarPrecio() {
   }
 
   if (moneda.value === "usd") {
-    document.getElementById("resultado").innerText =
-      "💵 USD: $" + data.precioUSD;
+    resultado.innerText = "💵 USD: $" + data.precioUSD;
   } else {
-    document.getElementById("resultado").innerText =
-      "🇻🇪 Bs: " + Math.round(data.precioBS).toLocaleString();
+    resultado.innerText = "🇻🇪 Bs: " + Math.round(data.precioBS).toLocaleString();
   }
 
-  // 🔥 ACTIVAR BOTÓN DIRECTAMENTE CON DATA
-  async function activarBoton() {
-
-  const boton = document.getElementById("btnWhatsAppFloat");
-  if (!boton) return;
-
-  const moneda = document.querySelector('input[name="moneda"]:checked');
-
-  if (!moneda) {
-    boton.classList.add("hidden");
-    return;
-  }
-
-  const data = await obtenerDatos();
-
-  if (!data || data.error || !data.codigo) {
-    boton.classList.add("hidden");
-    return;
-  }
-
+  // 🔥 ACTIVAR BOTÓN
   const mensaje = generarMensaje(data, moneda.value);
-
-  const link = `https://wa.me/584129578184?text=${encodeURIComponent(mensaje)}`;
-
-  boton.href = link;
-  boton.classList.remove("hidden");
-}
-// 🔹 Generar mensaje WhatsApp
-function generarMensaje(data, moneda, nombre = "") {
-
-  // 🔹 MODO PRODUCTO (QR individual)
-  if (!data.area) {
-
-    if (moneda === "usd") {
-      return `Hola, buen día.
-
-Estoy interesado en el producto:
-
-🔹 Código: ${data.codigo}
-💵 Precio: $${data.precioUSD}
-
-¿Disponibilidad?`;
-    }
-
-    return `Hola, buen día.
-
-Estoy interesado en el producto:
-
-🔹 Código: ${data.codigo}
-🇻🇪 Precio: ${Math.round(data.precioBS).toLocaleString()} Bs
-
-¿Disponibilidad?`;
-  }
-
-  // 🔹 MODO CALCULADORA (QR único)
-  return `Hola, buen día.
-
-Mi nombre es ${nombre || "cliente"}.
-
-Cotización:
-
-🔹 Código: ${data.codigo}
-🔹 Área: ${data.area} m2
-
-📦 Cantidad: ${data.cantidad}
-
-💰 Totales:
-USD: $${data.totalUSD}
-Bs: ${data.totalBS}
-
-¿Disponibilidad y entrega?`;
-}
-
-// 🔹 Botón WhatsApp
-  async function activarBoton() {
-
-  const boton = document.getElementById("btnWhatsAppFloat");
-  if (!boton) return;
-
-  const moneda = document.querySelector('input[name="moneda"]:checked');
-
-  // 🔥 SOLO validar moneda primero
-  if (!moneda) {
-    boton.classList.add("hidden");
-    return;
-  }
-
-  const data = await obtenerDatos();
-
-  if (!data || data.error || !data.codigo) {
-    boton.classList.add("hidden");
-    return;
-  }
-
-  const mensaje = generarMensaje(data, moneda.value);
-
-  const link = `https://wa.me/584129578184?text=${encodeURIComponent(mensaje)}`;
+  const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
 
   boton.href = link;
   boton.classList.remove("hidden");
 }
-
-  // 🔹 Detectar moneda seleccionada
-  const moneda = document.querySelector('input[name="moneda"]:checked');
-
-  if (!moneda) {
-    boton.classList.add("hidden");
-    return;
-  }
-
-  // 🔹 Generar mensaje inteligente (producto o calculadora)
-  const mensaje = generarMensaje(data, moneda.value, nombre);
-
-  const link = `https://wa.me/584129578184?text=${encodeURIComponent(mensaje)}`;
-
-  boton.href = link;
-  boton.classList.remove("hidden");
-}
-
-
-
-// 🔹 Eventos
-document.addEventListener("change", activarBoton);
-document.addEventListener("DOMContentLoaded", activarBoton);
 
 </script>
-</body>
-</html>
-
-
-</script>
-
-</body>
-</html>
