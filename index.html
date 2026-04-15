@@ -116,37 +116,29 @@ async function obtenerDatos() {
 }
 
 // 🔹 Generar mensaje WhatsApp
-function obtenerSaludo() {
-  const hora = new Date().getHours();
-
-  if (hora < 12) return "Buenos días";
-  if (hora < 19) return "Buenas tardes";
-  return "Buenas noches";
-}
-
 function generarMensaje(data, moneda) {
 
   const saludo = obtenerSaludo();
 
-  // 🔹 MODO CALCULADORA
-  if (data.area && data.totalUSD) {
+  // 🔵 CALCULADORA (si hay total)
+  if (data.totalUSD) {
     return `Hola, ${saludo} 👋
 
-Cotización:
+Estoy interesado en esta cotización:
 
 🔹 Código: ${data.codigo}
 🔹 Área: ${data.area} m²
 
 📦 Cantidad: ${data.cantidad}
 
-💰 Totales:
+💰 Total:
 USD: $${data.totalUSD}
 Bs: ${Math.round(data.totalBS).toLocaleString()}
 
-¿Disponibilidad y entrega?`;
+¿Disponibilidad y tiempo de entrega?`;
   }
 
-  // 🔹 MODO PRODUCTO
+  // 🟢 PRODUCTO
   if (moneda === "usd") {
     return `Hola, ${saludo} 👋
 
