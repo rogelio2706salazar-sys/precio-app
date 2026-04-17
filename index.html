@@ -176,7 +176,8 @@ async function mostrarPrecio() {
 
   const data = await obtenerDatos();
 
-  console.log("DATA:", data);
+ console.log("DATA:", data);
+console.log("ES CALCULADORA:", data.esCalculadora);
 
   if (!data || data.error) {
     resultado.innerText = "Producto no encontrado";
