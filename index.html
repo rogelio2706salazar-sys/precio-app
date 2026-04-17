@@ -114,10 +114,17 @@ async function calcular() {
   const data = await res.json();
 
   if (!data || data.error) {
-    resultado.innerText = "Producto no encontrado";
-    boton.classList.add("hidden");
-    return;
-  }
+  resultado.innerText = "Producto no encontrado";
+  boton.classList.add("hidden");
+  return;
+}
+
+// 👇 PEGAR AQUÍ
+if (!data.cobertura) {
+  resultado.innerText = "Producto sin cobertura definida";
+  boton.classList.add("hidden");
+  return;
+}
 
   
  // 🔹 DATOS (puedes ajustar)
