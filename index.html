@@ -2,64 +2,41 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Consultar Precio</title>
+<title>Calculadora de Precio</title>
 
 <style>
 body { 
   font-family: Arial; 
   text-align: center; 
   padding: 30px;
-  padding-bottom: 90px;
+}
+
+input, button {
+  display: block;
+  margin: 10px auto;
+  padding: 14px;
+  font-size: 16px;
+  width: 90%;
+  max-width: 350px;
 }
 
 button {
-  display: block;
-  margin: 10px auto;
-  
   background: #333;
   color: white;
-  
-  padding: 14px;
-  border-radius: 10px;
-  
-  font-size: 16px;
-  font-weight: bold;
-  
-  width: 90%;
-  max-width: 350px;
-  
   border: none;
+  border-radius: 10px;
 }
 
-#btnWhatsAppFloat {
-  display: block;
-  margin: 15px auto;
-  
+#btnWhatsApp {
   background: #25D366;
   color: white;
-  
-  padding: 16px;        /* 👈 AQUÍ */
-  font-size: 17px;      /* 👈 AQUÍ */
-  
   border-radius: 10px;
-  
   text-decoration: none;
   font-weight: bold;
-  
-  width: 90%;
-  max-width: 350px;
-  
-  text-align: center;
 }
 
 .hidden {
   display: none;
-}
-
-@keyframes latido {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
 }
 </style>
 
@@ -67,9 +44,10 @@ button {
 
 <body>
 
-<h2>Consultar Precio</h2>
+<h2>🧮 Calcula tu proyecto</h2>
 
-<p id="producto"></p>
+<input type="text" id="codigo" placeholder="Código del producto">
+<input type="number" id="area" placeholder="Área en m²">
 
 <label>
   <input type="radio" name="moneda" value="usd" checked> USD
@@ -79,105 +57,46 @@ button {
   <input type="radio" name="moneda" value="bs"> Bolívares
 </label>
 
-<br><br>
-
-<button onclick="mostrarPrecio()">Ver precio</button>
-
-<a id="btnWhatsAppFloat" target="_blank" class="hidden">
-  💬 Consultar por WhatsApp
-</a>
-
-<br><br>
+<button onclick="calcular()">Calcular</button>
 
 <h3 id="resultado"></h3>
 
+<a id="btnWhatsApp" target="_blank" class="hidden">
+  💬 Consultar por WhatsApp
+</a>
+
 <script>
 
-// 🔹 CONFIG
+// CONFIG
 const numeroWhatsApp = "584129578184";
 const API_URL = "https://script.google.com/macros/s/AKfycbz6nkaIl3O7FOy2-qs2mZ24nRjrp5iPPaz25nAfvDLiU5UEwEKv8zgvPQ5mjhMuOfXO7w/exec";
 
-// 🔹 Obtener código QR
-const params = new URLSearchParams(window.location.search);
-const codigoQR = params.get("codigo");
-
-// 🔹 Mostrar código
-document.getElementById("producto").innerText = "Producto: " + (codigoQR || "N/A");
-
-// 🔹 Obtener datos
-async function obtenerDatos() {
-  try {
-    const res = await fetch(`${API_URL}?codigo=${codigoQR}`);
-    return await res.json();
-  } catch (error) {
-    console.error("Error:", error);
-    return null;
-  }
-}
-  function obtenerSaludo() {
+// SALUDO
+function obtenerSaludo() {
   const hora = new Date().getHours();
-
   if (hora < 12) return "Buenos días";
   if (hora < 19) return "Buenas tardes";
   return "Buenas noches";
 }
 
-// 🔹 Generar mensaje WhatsApp
-function generarMensaje(data, moneda) {
+// CALCULAR
+async function calcular() {
 
-  const saludo = obtenerSaludo();
-
-  // 🔵 SOLO si es calculadora real
-  if (data.esCalculadora) {
-    return `Hola, ${saludo} 👋
-
-Estoy interesado en esta cotización:
-
-🔹 Código: ${data.codigo}
-🔹 Área: ${data.area} m²
-
-📦 Cantidad: ${data.cantidad}
-
-💰 Total:
-USD: $${data.totalUSD}
-Bs: ${Math.round(data.totalBS).toLocaleString()}
-
-¿Disponibilidad y tiempo de entrega?`;
-  }
-
-  // 🟢 PRODUCTO
-  if (moneda === "usd") {
-    return `Hola, ${saludo} 👋
-
-Estoy interesado en el producto:
-
-🔹 Código: ${data.codigo}
-💵 Precio: $${data.precioUSD}
-
-¿Disponibilidad?`;
-  }
-
-  return `Hola, ${saludo} 👋
-
-Estoy interesado en el producto:
-
-🔹 Código: ${data.codigo}
-🇻🇪 Precio: ${Math.round(data.precioBS).toLocaleString()} Bs
-
-¿Disponibilidad?`;
-}
-// 🔹 Mostrar precio + botón
-async function mostrarPrecio() {
-
+  const codigo = document.getElementById("codigo").value.trim();
+  const area = parseFloat(document.getElementById("area").value);
   const resultado = document.getElementById("resultado");
-  const boton = document.getElementById("btnWhatsAppFloat");
+  const boton = document.getElementById("btnWhatsApp");
 
-  resultado.innerText = "⏳ Consultando...";
+  if (!codigo || !area) {
+    alert("Ingrese código y área");
+    return;
+  }
 
-  const data = await obtenerDatos();
+  resultado.innerText = "⏳ Calculando...";
 
- console.log("DATA:", data);
-console.log("ES CALCULADORA:", data.esCalculadora);
+  // 🔥 Traer precio
+  const res = await fetch(`${API_URL}?codigo=${codigo}`);
+  const data = await res.json();
 
   if (!data || data.error) {
     resultado.innerText = "Producto no encontrado";
@@ -185,46 +104,45 @@ console.log("ES CALCULADORA:", data.esCalculadora);
     return;
   }
 
-  const moneda = document.querySelector('input[name="moneda"]:checked');
+  // 🔹 DATOS (puedes ajustar)
+  const cobertura = 2.97;
+  const cantidad = Math.ceil(area / cobertura);
 
-  if (!moneda) {
-    alert("Seleccione una opción");
-    return;
-  }
+  const totalUSD = cantidad * data.precioUSD;
+  const totalBS = cantidad * data.precioBS;
 
-  // 🔵 CALCULADORA
-// 🔵 CALCULADORA
-if (data.esCalculadora) {
-  resultado.innerText =
-    `💰 Total:
-USD: $${data.totalUSD}
-Bs: ${Math.round(data.totalBS).toLocaleString()}`;
-}
+  // 🔹 Mostrar resultado
+  resultado.innerHTML = `
+  🔹 Cantidad: ${cantidad}<br><br>
+  💰 Total:<br>
+  USD: <b>$${totalUSD}</b><br>
+  Bs: <b>${Math.round(totalBS).toLocaleString()}</b>
+  `;
 
-// 🟢 PRODUCTO
-else if (moneda.value === "usd") {
-  resultado.innerText = "💵 USD: $" + data.precioUSD;
-} else {
-  resultado.innerText = "🇻🇪 Bs: " + Math.round(data.precioBS).toLocaleString();
-}
+  // 🔹 WhatsApp
+  const saludo = obtenerSaludo();
 
-  // 🔥 Activar botón WhatsApp
-  const mensaje = generarMensaje(data, moneda.value);
+  const mensaje = `Hola, ${saludo} 👋
+
+Estoy interesado en esta cotización:
+
+🔹 Código: ${codigo}
+🔹 Área: ${area} m²
+📦 Cantidad: ${cantidad}
+
+💰 Total:
+USD: $${totalUSD}
+Bs: ${Math.round(totalBS).toLocaleString()}
+
+¿Disponibilidad y entrega?`;
+
   const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
 
   boton.href = link;
   boton.classList.remove("hidden");
 }
-  // 🔹 Ejecutar automáticamente al cargar
-document.addEventListener("DOMContentLoaded", () => {
-  mostrarPrecio();
-});
-
-// 🔹 Ejecutar al cambiar moneda
-document.addEventListener("change", mostrarPrecio);
 
 </script>
 
 </body>
 </html>
-
