@@ -192,7 +192,8 @@ async function mostrarPrecio() {
   }
 
   // 🔵 CALCULADORA
-if (data.totalUSD && data.totalBS) {
+// 🔵 CALCULADORA
+if (data.esCalculadora) {
   resultado.innerText =
     `💰 Total:
 USD: $${data.totalUSD}
