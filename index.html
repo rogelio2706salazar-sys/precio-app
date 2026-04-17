@@ -204,6 +204,13 @@ async function mostrarPrecio() {
   boton.href = link;
   boton.classList.remove("hidden");
 }
+  // 🔹 Ejecutar automáticamente al cargar
+document.addEventListener("DOMContentLoaded", () => {
+  mostrarPrecio();
+});
+
+// 🔹 Ejecutar al cambiar moneda
+document.addEventListener("change", mostrarPrecio);
 
 </script>
 
