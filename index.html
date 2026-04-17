@@ -127,8 +127,8 @@ function generarMensaje(data, moneda) {
 
   const saludo = obtenerSaludo();
 
-  // 🔵 CALCULADORA (si existen totales)
-  if (data.totalUSD && data.totalBS) {
+  // 🔵 SOLO si es calculadora real
+  if (data.esCalculadora) {
     return `Hola, ${saludo} 👋
 
 Estoy interesado en esta cotización:
