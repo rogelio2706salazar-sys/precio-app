@@ -191,11 +191,20 @@ async function mostrarPrecio() {
     return;
   }
 
-  if (moneda.value === "usd") {
-    resultado.innerText = "💵 USD: $" + data.precioUSD;
-  } else {
-    resultado.innerText = "🇻🇪 Bs: " + Math.round(data.precioBS).toLocaleString();
-  }
+  // 🔵 CALCULADORA
+if (data.totalUSD && data.totalBS) {
+  resultado.innerText =
+    `💰 Total:
+USD: $${data.totalUSD}
+Bs: ${Math.round(data.totalBS).toLocaleString()}`;
+}
+
+// 🟢 PRODUCTO
+else if (moneda.value === "usd") {
+  resultado.innerText = "💵 USD: $" + data.precioUSD;
+} else {
+  resultado.innerText = "🇻🇪 Bs: " + Math.round(data.precioBS).toLocaleString();
+}
 
   // 🔥 Activar botón WhatsApp
   const mensaje = generarMensaje(data, moneda.value);
