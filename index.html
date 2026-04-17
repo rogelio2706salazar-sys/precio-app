@@ -28,12 +28,27 @@ button {
 }
 
 #btnWhatsApp {
+  display: block;
+  margin: 20px auto;
+  
   background: #25D366;
   color: white;
-  border-radius: 10px;
-  text-decoration: none;
+  
+  padding: 18px;
+  font-size: 18px;
   font-weight: bold;
+  
+  border-radius: 12px;
+  text-decoration: none;
+
+  width: 95%;
+  max-width: 380px;
+
+  text-align: center;
+
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
+
 
 .hidden {
   display: none;
@@ -106,7 +121,19 @@ async function calcular() {
 
   // 🔹 DATOS (puedes ajustar)
   const cobertura = 2.97;
-  const cantidad = Math.ceil(area / cobertura);
+  const division = area / cobertura;
+const entero = Math.floor(division);
+const decimal = division - entero;
+
+let cantidad;
+
+if (decimal <= 0.2) {
+  cantidad = entero;
+} else {
+  cantidad = entero + 1;
+  if (cantidad < 1) cantidad = 1;
+
+}
 
   const totalUSD = cantidad * data.precioUSD;
   const totalBS = cantidad * data.precioBS;
