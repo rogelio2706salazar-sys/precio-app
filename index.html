@@ -83,10 +83,11 @@ const API_URL = "https://script.google.com/macros/s/AKfycbz6nkaIl3O7FOy2-qs2mZ24
 const params = new URLSearchParams(window.location.search);
 const codigoQR = params.get("codigo");
 
-// 🔹 AUTOCOMPLETAR SI VIENE DE QR
-if (codigoQR && codigoQR !== "CALC") {
-  document.getElementById("codigo").value = codigoQR;
-}
+// 🔹 ELEMENTOS
+const inputCodigo = document.getElementById("codigo");
+const inputArea = document.getElementById("area");
+const resultado = document.getElementById("resultado");
+const boton = document.getElementById("btnWhatsApp");
 
 // 🔹 SALUDO
 function obtenerSaludo() {
@@ -96,13 +97,53 @@ function obtenerSaludo() {
   return "Buenas noches";
 }
 
-// 🔹 CALCULAR
+// 🔴 MODO PRODUCTO (QR INDIVIDUAL)
+async function modoProducto(codigo) {
+
+  inputCodigo.style.display = "none";
+  inputArea.style.display = "none";
+  document.querySelector("button").style.display = "none";
+
+  resultado.innerText = "⏳ Consultando...";
+
+  const res = await fetch(`${API_URL}?codigo=${codigo}`);
+  const data = await res.json();
+
+  if (!data || data.error) {
+    resultado.innerText = "Producto no encontrado";
+    return;
+  }
+
+  const moneda = document.querySelector('input[name="moneda"]:checked');
+
+  if (moneda.value === "usd") {
+    resultado.innerText = "💵 Precio: $" + data.precioUSD;
+  } else {
+    resultado.innerText = "🇻🇪 Precio: " + Math.round(data.precioBS).toLocaleString();
+  }
+
+  const saludo = obtenerSaludo();
+
+  const mensaje = `Hola, ${saludo} 👋
+
+Estoy interesado en el producto:
+
+🔹 Código: ${codigo}
+💰 Precio: ${moneda.value === "usd" ? "$" + data.precioUSD : Math.round(data.precioBS)}
+
+¿Disponibilidad?`;
+
+  const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+  boton.href = link;
+  boton.classList.remove("hidden");
+}
+
+// 🟢 MODO CALCULADORA
 async function calcular() {
 
-  const codigo = document.getElementById("codigo").value.trim();
-  const area = parseFloat(document.getElementById("area").value);
-  const resultado = document.getElementById("resultado");
-  const boton = document.getElementById("btnWhatsApp");
+  const codigo = inputCodigo.value.trim();
+  const area = parseFloat(inputArea.value);
 
   if (!codigo || !area) {
     alert("Ingrese código y área");
@@ -111,64 +152,41 @@ async function calcular() {
 
   resultado.innerText = "⏳ Calculando...";
 
-  try {
+  const res = await fetch(`${API_URL}?codigo=${codigo}`);
+  const data = await res.json();
 
-    const res = await fetch(`${API_URL}?codigo=${codigo}`);
-    const data = await res.json();
+  if (!data || data.error) {
+    resultado.innerText = "Producto no encontrado";
+    boton.classList.add("hidden");
+    return;
+  }
 
-    if (!data || data.error) {
-      resultado.innerText = "Producto no encontrado";
-      boton.classList.add("hidden");
-      return;
-    }
+  if (!data.cobertura) {
+    resultado.innerText = "Producto sin cobertura definida";
+    boton.classList.add("hidden");
+    return;
+  }
 
-    // 🔴 VALIDAR COBERTURA
-    if (!data.cobertura) {
-      resultado.innerText = "Producto sin cobertura definida";
-      boton.classList.add("hidden");
-      return;
-    }
+  const division = area / data.cobertura;
+  const entero = Math.floor(division);
+  const decimal = division - entero;
 
-    // 🔹 CÁLCULO INTELIGENTE
-    const division = area / data.cobertura;
-    const entero = Math.floor(division);
-    const decimal = division - entero;
+  let cantidad = (decimal <= 0.2) ? entero : entero + 1;
+  if (cantidad < 1) cantidad = 1;
 
-    let cantidad;
+  const totalUSD = cantidad * data.precioUSD;
+  const totalBS = cantidad * data.precioBS;
 
-    if (decimal <= 0.2) {
-      cantidad = entero;
-    } else {
-      cantidad = entero + 1;
-    }
+  resultado.innerHTML = `
+  🔹 Cantidad: ${cantidad}<br><br>
+  💰 Total:<br>
+  USD: <b>$${totalUSD}</b><br>
+  Bs: <b>${Math.round(totalBS).toLocaleString()}</b>
+  `;
 
-    if (cantidad < 1) cantidad = 1;
+  const saludo = obtenerSaludo();
 
-    const totalUSD = cantidad * data.precioUSD;
-    const totalBS = cantidad * data.precioBS;
-
-    // 🔹 MONEDA
-    const moneda = document.querySelector('input[name="moneda"]:checked');
-
-    let totalTexto = "";
-
-    if (moneda.value === "usd") {
-      totalTexto = `USD: <b>$${totalUSD}</b>`;
-    } else {
-      totalTexto = `Bs: <b>${Math.round(totalBS).toLocaleString()}</b>`;
-    }
-
-    // 🔹 RESULTADO
-    resultado.innerHTML = `
-    🔹 Cantidad: ${cantidad}<br><br>
-    💰 Total:<br>
-    ${totalTexto}
-    `;
-
-    // 🔹 WHATSAPP
-    const saludo = obtenerSaludo();
-
-    const mensaje = `Hola, ${saludo} 👋
+  const mensaje = `Hola, ${saludo} 👋
 
 Estoy interesado en esta cotización:
 
@@ -182,22 +200,13 @@ Bs: ${Math.round(totalBS).toLocaleString()}
 
 ¿Disponibilidad y entrega?`;
 
-    const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-
-    boton.href = link;
-    boton.classList.remove("hidden");
-
-  } catch (error) {
-    resultado.innerText = "Error al consultar datos";
-    boton.classList.add("hidden");
-  }
+  boton.href = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+  boton.classList.remove("hidden");
 }
 
-// 🔹 AUTO CALCULAR SI VIENE DE QR
+// 🔥 DETECTOR AUTOMÁTICO
 if (codigoQR && codigoQR !== "CALC") {
-  setTimeout(() => {
-    document.getElementById("area").focus();
-  }, 500);
+  modoProducto(codigoQR);
 }
 
 </script>
