@@ -30,25 +30,18 @@ button {
 #btnWhatsApp {
   display: block;
   margin: 20px auto;
-  
   background: #25D366;
   color: white;
-  
   padding: 18px;
   font-size: 18px;
   font-weight: bold;
-  
   border-radius: 12px;
   text-decoration: none;
-
   width: 95%;
   max-width: 380px;
-
   text-align: center;
-
   box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
-
 
 .hidden {
   display: none;
@@ -82,11 +75,20 @@ button {
 
 <script>
 
-// CONFIG
+// 🔹 CONFIG
 const numeroWhatsApp = "584129578184";
 const API_URL = "https://script.google.com/macros/s/AKfycbz6nkaIl3O7FOy2-qs2mZ24nRjrp5iPPaz25nAfvDLiU5UEwEKv8zgvPQ5mjhMuOfXO7w/exec";
 
-// SALUDO
+// 🔹 DETECTAR QR
+const params = new URLSearchParams(window.location.search);
+const codigoQR = params.get("codigo");
+
+// 🔹 AUTOCOMPLETAR SI VIENE DE QR
+if (codigoQR && codigoQR !== "CALC") {
+  document.getElementById("codigo").value = codigoQR;
+}
+
+// 🔹 SALUDO
 function obtenerSaludo() {
   const hora = new Date().getHours();
   if (hora < 12) return "Buenos días";
@@ -94,7 +96,7 @@ function obtenerSaludo() {
   return "Buenas noches";
 }
 
-// CALCULAR
+// 🔹 CALCULAR
 async function calcular() {
 
   const codigo = document.getElementById("codigo").value.trim();
@@ -109,55 +111,64 @@ async function calcular() {
 
   resultado.innerText = "⏳ Calculando...";
 
-  // 🔥 Traer precio
-  const res = await fetch(`${API_URL}?codigo=${codigo}`);
-  const data = await res.json();
+  try {
 
-  if (!data || data.error) {
-  resultado.innerText = "Producto no encontrado";
-  boton.classList.add("hidden");
-  return;
-}
+    const res = await fetch(`${API_URL}?codigo=${codigo}`);
+    const data = await res.json();
 
-// 👇 PEGAR AQUÍ
-if (!data.cobertura) {
-  resultado.innerText = "Producto sin cobertura definida";
-  boton.classList.add("hidden");
-  return;
-}
+    if (!data || data.error) {
+      resultado.innerText = "Producto no encontrado";
+      boton.classList.add("hidden");
+      return;
+    }
 
-  
- // 🔹 DATOS (puedes ajustar)
-  
-  const division = area / data.cobertura;
-const entero = Math.floor(division);
-const decimal = division - entero;
+    // 🔴 VALIDAR COBERTURA
+    if (!data.cobertura) {
+      resultado.innerText = "Producto sin cobertura definida";
+      boton.classList.add("hidden");
+      return;
+    }
 
-let cantidad;
+    // 🔹 CÁLCULO INTELIGENTE
+    const division = area / data.cobertura;
+    const entero = Math.floor(division);
+    const decimal = division - entero;
 
-if (decimal <= 0.2) {
-  cantidad = entero;
-} else {
-  cantidad = entero + 1;
-  if (cantidad < 1) cantidad = 1;
+    let cantidad;
 
-}
+    if (decimal <= 0.2) {
+      cantidad = entero;
+    } else {
+      cantidad = entero + 1;
+    }
 
-  const totalUSD = cantidad * data.precioUSD;
-  const totalBS = cantidad * data.precioBS;
+    if (cantidad < 1) cantidad = 1;
 
-  // 🔹 Mostrar resultado
-  resultado.innerHTML = `
-  🔹 Cantidad: ${cantidad}<br><br>
-  💰 Total:<br>
-  USD: <b>$${totalUSD}</b><br>
-  Bs: <b>${Math.round(totalBS).toLocaleString()}</b>
-  `;
+    const totalUSD = cantidad * data.precioUSD;
+    const totalBS = cantidad * data.precioBS;
 
-  // 🔹 WhatsApp
-  const saludo = obtenerSaludo();
+    // 🔹 MONEDA
+    const moneda = document.querySelector('input[name="moneda"]:checked');
 
-  const mensaje = `Hola, ${saludo} 👋
+    let totalTexto = "";
+
+    if (moneda.value === "usd") {
+      totalTexto = `USD: <b>$${totalUSD}</b>`;
+    } else {
+      totalTexto = `Bs: <b>${Math.round(totalBS).toLocaleString()}</b>`;
+    }
+
+    // 🔹 RESULTADO
+    resultado.innerHTML = `
+    🔹 Cantidad: ${cantidad}<br><br>
+    💰 Total:<br>
+    ${totalTexto}
+    `;
+
+    // 🔹 WHATSAPP
+    const saludo = obtenerSaludo();
+
+    const mensaje = `Hola, ${saludo} 👋
 
 Estoy interesado en esta cotización:
 
@@ -171,10 +182,22 @@ Bs: ${Math.round(totalBS).toLocaleString()}
 
 ¿Disponibilidad y entrega?`;
 
-  const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+    const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
 
-  boton.href = link;
-  boton.classList.remove("hidden");
+    boton.href = link;
+    boton.classList.remove("hidden");
+
+  } catch (error) {
+    resultado.innerText = "Error al consultar datos";
+    boton.classList.add("hidden");
+  }
+}
+
+// 🔹 AUTO CALCULAR SI VIENE DE QR
+if (codigoQR && codigoQR !== "CALC") {
+  setTimeout(() => {
+    document.getElementById("area").focus();
+  }, 500);
 }
 
 </script>
