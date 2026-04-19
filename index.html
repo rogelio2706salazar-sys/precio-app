@@ -54,9 +54,13 @@ button {
 
 <h2>🧮 Calcula tu proyecto</h2>
 
-<input type="text" id="codigo" placeholder="Código del producto">
-<input type="number" id="area" placeholder="Área en m²">
+<div id="bloqueCalculadora">
+  <input type="text" id="codigo" placeholder="Código del producto">
+  <input type="number" id="area" placeholder="Área en m²">
+</div>
 
+<label>...</label>
+<button onclick="calcular()">Calcular</button>
 <label>
   <input type="radio" name="moneda" value="usd" checked> USD
 </label>
@@ -233,6 +237,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 🔹 CAMBIO MONEDA
 document.addEventListener("change", calcular);
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const params = new URLSearchParams(window.location.search);
+  const codigoQR = params.get("codigo");
+
+  // 🔥 MODO SEGÚN QR
+  if (codigoQR && codigoQR !== "CALC") {
+
+    // 🔹 MODO PRODUCTO (QR individual)
+    document.getElementById("blo
 
 </script>
 
