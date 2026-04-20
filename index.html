@@ -236,19 +236,39 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // 🔹 CAMBIO MONEDA
-document.addEventListener("change", calcular);
-
 document.addEventListener("DOMContentLoaded", () => {
 
   const params = new URLSearchParams(window.location.search);
   const codigoQR = params.get("codigo");
 
-  // 🔥 MODO SEGÚN QR
+  const inputCodigo = document.getElementById("codigo");
+  const bloque = document.getElementById("bloqueCalculadora");
+  const titulo = document.querySelector("h2");
+
   if (codigoQR && codigoQR !== "CALC") {
 
-    // 🔹 MODO PRODUCTO (QR individual)
-    document.getElementById("blo
+    // 🔹 MODO PRODUCTO
+    titulo.innerText = "Consultar Precio";
 
+    bloque.style.display = "none";
+
+    inputCodigo.value = codigoQR;
+
+    calcular(); // 🔥 ejecuta automático
+
+  } else {
+
+    // 🔹 MODO CALCULADORA
+    titulo.innerText = "🧮 Calcula tu proyecto";
+
+    bloque.style.display = "block";
+
+  }
+
+});
+  document.querySelectorAll('input[name="moneda"]').forEach(radio => {
+  radio.addEventListener("change", calcular);
+});
 </script>
 
 </body>
