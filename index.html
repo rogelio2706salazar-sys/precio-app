@@ -239,6 +239,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+  // 🔄 CAMBIO AUTOMÁTICO DE MONEDA
+document.querySelectorAll('input[name="moneda"]').forEach(radio => {
+  radio.addEventListener("change", () => {
+
+    const codigo = document.getElementById("codigo").value;
+
+    // 🔹 SOLO si es QR individual
+    if (codigo && document.getElementById("bloqueCalculadora").style.display === "none") {
+      calcular();
+    }
+
+  });
 
 </script>
 
