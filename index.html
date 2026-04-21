@@ -59,6 +59,7 @@ button {
 <body>
 
 <h2 id="titulo">🧮 Calcula tu Proyecto</h2>
+  <p id="codigoProducto" style="font-weight: bold; margin-top: 10px;"></p>
 
 <!-- 🔵 BLOQUE CALCULADORA -->
 <div id="bloqueCalculadora">
@@ -218,25 +219,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputCodigo = document.getElementById("codigo");
   const titulo = document.getElementById("titulo");
 
-  if (codigoQR && codigoQR !== "CALC") {
+ if (codigoQR && codigoQR !== "CALC") {
 
-    // 🔹 QR INDIVIDUAL
-    titulo.innerText = "Consultar Precio";
+  // 🔹 QR INDIVIDUAL
+  titulo.innerText = "Consultar Precio";
 
-    bloque.style.display = "none";
+  bloque.style.display = "none";
 
-    inputCodigo.value = codigoQR;
+  inputCodigo.value = codigoQR;
 
-    calcular();
+  // 🔥 MOSTRAR CÓDIGO EN PANTALLA
+  document.getElementById("codigoProducto").innerText = "Código: " + codigoQR;
 
-  } else {
+  calcular();
 
-    // 🔹 QR ÚNICO
-    titulo.innerText = "🧮 Calcula tu Proyecto";
+} else {
 
-    bloque.style.display = "block";
+  // 🔹 QR ÚNICO
+  titulo.innerText = "🧮 Calcula tu proyecto";
 
-  }
+  bloque.style.display = "block";
+
+  // 🔥 OCULTAR TEXTO
+  document.getElementById("codigoProducto").innerText = "";
+
+}
 
 });
   // 🔄 CAMBIO AUTOMÁTICO DE MONEDA
