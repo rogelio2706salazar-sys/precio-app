@@ -78,6 +78,7 @@ button {
 </label>
 
 <h3 id="resultado"></h3>
+<p id="tasa" style="margin-top:10px; font-size:14px; color:#555;"></p>
 
 <a id="btnWhatsApp" target="_blank" class="hidden">
   💬 Consultar por WhatsApp
@@ -117,6 +118,20 @@ async function calcular() {
   // 🔹 LLAMAR API
   const res = await fetch(`${API_URL}?codigo=${codigo}`);
   const data = await res.json();
+  // 🔹 Mostrar tasa BCV (formato correcto)
+if (data.tasa) {
+
+  let tasaFormateada;
+
+  if (typeof data.tasa === "number") {
+    tasaFormateada = data.tasa.toLocaleString();
+  } else {
+    tasaFormateada = data.tasa; // ya viene formateada (ej: 478,58)
+  }
+
+  document.getElementById("tasa").innerText =
+    "Tasa BCV: " + tasaFormateada + " Bs";
+}
 
   if (!data || data.error) {
     resultado.innerText = "Producto no encontrado";
