@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Calculadora de Precio</title>
+
+<style>
+body { 
+  font-family: Arial; 
+  text-align: center; 
+  padding: 30px;
+}
+
+input, button {
+  display: block;
+  margin: 10px auto;
+  padding: 14px;
+  font-size: 16px;
+  width: 90%;
+  max-width: 350px;
+}
+
+button {
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 10px;
+}
+
+/* 🔥 BOTÓN WHATSAPP GRANDE */
+#btnWhatsApp {
+  display: block;
+  margin: 20px auto;
+  
+  background: #25D366;
+  color: white;
+  
+  padding: 18px;
+  font-size: 18px;
+  font-weight: bold;
+  
+  border-radius: 12px;
+  text-decoration: none;
+
+  width: 95%;
+  max-width: 380px;
+
+  text-align: center;
+
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+.hidden {
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<h2 id="titulo">🧮 Calcula tu Proyecto</h2>
+  <p id="codigoProducto" style="font-weight: bold; margin-top: 10px;"></p>
+
+<!-- 🔵 BLOQUE CALCULADORA -->
+<div id="bloqueCalculadora">
+  <input type="text" id="codigo" placeholder="Código del producto">
+  <input type="number" id="area" placeholder="Área en m²">
+  <button onclick="calcular()">Calcular</button>
+</div>
+
+<!-- 🔵 MONEDA -->
+<label>
+  <input type="radio" name="moneda" value="usd" checked> USD
+</label>
+
+<label>
+  <input type="radio" name="moneda" value="bs"> Bolívares
+</label>
+
+<h3 id="resultado"></h3>
+<p id="tasa" style="margin-top:10px; font-size:14px; color:#555;"></p>
+
+<a id="btnWhatsApp" target="_blank" class="hidden">
+  💬 Consultar por WhatsApp
+</a>
+
+<script>
+
+// 🔹 CONFIG
+const numeroWhatsApp = "584129578184";
+const API_URL = "https://script.google.com/macros/s/AKfycbz6nkaIl3O7FOy2-qs2mZ24nRjrp5iPPaz25nAfvDLiU5UEwEKv8zgvPQ5mjhMuOfXO7w/exec";
+
+// 🔹 SALUDO
+function obtenerSaludo() {
+  const hora = new Date().getHours();
+  if (hora < 12) return "Buenos días";
+  if (hora < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+// 🔹 CALCULAR
+async function calcular() {
+
+  const codigo = document.getElementById("codigo").value.trim().toUpperCase();
+  const areaInput = document.getElementById("area").value;
+  const area = parseFloat(areaInput);
+
+  const resultado = document.getElementById("resultado");
+  const boton = document.getElementById("btnWhatsApp");
+
+  if (!codigo) {
+    alert("Ingrese código");
+    return;
+  }
+
+  resultado.innerText = "⏳ Calculando...";
+
+  // 🔹 LLAMAR API
+  const res = await fetch(`${API_URL}?codigo=${codigo}`);
+  const data = await res.json();
+  // 🔹 Mostrar tasa BCV (formato correcto)
+if (data.tasa) {
+
+  let tasaFormateada;
+
+  if (typeof data.tasa === "number") {
+    tasaFormateada = data.tasa.toLocaleString();
+  } else {
+    tasaFormateada = data.tasa; // ya viene formateada (ej: 478,58)
+  }
+
+  document.getElementById("tasa").innerText =
+    "Tasa BCV: " + tasaFormateada + " Bs";
+}
+
+  if (!data || data.error) {
+    resultado.innerText = "Producto no encontrado";
+    boton.classList.add("hidden");
+    return;
+  }
+
+  const moneda = document.querySelector('input[name="moneda"]:checked');
+
+  let textoResultado = "";
+  let mensaje = "";
+
+  const saludo = obtenerSaludo();
+
+  // 🔵 MODO PRODUCTO (SIN ÁREA)
+  if (!areaInput) {
+
+    if (moneda.value === "usd") {
+      textoResultado = `💵 Precio: $${data.precioUSD}`;
+    } else {
+      textoResultado = `🇻🇪 Precio: ${Math.round(data.precioBS).toLocaleString()}`;
+    }
+
+    mensaje = `Hola, ${saludo} 👋
+
+Estoy interesado en el producto:
+
+🔹 Código: ${codigo}
+💰 Precio: ${moneda.value === "usd" ? "$" + data.precioUSD : Math.round(data.precioBS).toLocaleString() + " Bs"}
+
+¿Disponibilidad?`;
+
+  }
+
+  // 🔵 MODO CALCULADORA
+  else {
+
+    if (!data.cobertura) {
+      resultado.innerText = "Producto sin cobertura definida";
+      boton.classList.add("hidden");
+      return;
+    }
+
+    const division = area / data.cobertura;
+    const entero = Math.floor(division);
+    const decimal = division - entero;
+
+    let cantidad;
+
+    if (decimal <= 0.2) {
+      cantidad = entero;
+    } else {
+      cantidad = entero + 1;
+    }
+
+    if (cantidad < 1) cantidad = 1;
+
+    const totalUSD = cantidad * data.precioUSD;
+    const totalBS = cantidad * data.precioBS;
+
+    textoResultado = `
+📦 Cantidad: ${cantidad}
+
+💰 Total:
+USD: $${totalUSD}
+Bs: ${Math.round(totalBS).toLocaleString()}
+`;
+
+    mensaje = `Hola, ${saludo} 👋
+
+Estoy interesado en esta cotización:
+
+🔹 Código: ${codigo}
+🔹 Área: ${area} m²
+📦 Cantidad: ${cantidad}
+
+💰 Total:
+USD: $${totalUSD}
+Bs: ${Math.round(totalBS).toLocaleString()}
+
+¿Disponibilidad y entrega?`;
+
+  }
+
+  resultado.innerText = textoResultado;
+
+  const link = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+  boton.href = link;
+  boton.classList.remove("hidden");
+}
+
+// 🔹 DETECTAR MODO QR
+document.addEventListener("DOMContentLoaded", () => {
+
+  const params = new URLSearchParams(window.location.search);
+  const codigoQR = params.get("codigo");
+
+  const bloque = document.getElementById("bloqueCalculadora");
+  const inputCodigo = document.getElementById("codigo");
+  const titulo = document.getElementById("titulo");
+
+ if (codigoQR && codigoQR !== "CALC") {
+
+  // 🔹 QR INDIVIDUAL
+  titulo.innerText = "Consultar Precio";
+
+  bloque.style.display = "none";
+
+  inputCodigo.value = codigoQR;
+
+  // 🔥 MOSTRAR CÓDIGO EN PANTALLA
+  document.getElementById("codigoProducto").innerText = "Código: " + codigoQR;
+
+  calcular();
+
+} else {
+
+  // 🔹 QR ÚNICO
+  titulo.innerText = "🧮 Calcula tu Proyecto";
+
+  bloque.style.display = "block";
+
+  // 🔥 OCULTAR TEXTO
+  document.getElementById("codigoProducto").innerText = "";
+
+}
+
+});
+  // 🔄 CAMBIO AUTOMÁTICO DE MONEDA
+document.querySelectorAll('input[name="moneda"]').forEach(radio => {
+  radio.addEventListener("change", () => {
+
+    const codigo = document.getElementById("codigo").value;
+
+    // 🔹 SOLO si es QR individual
+    if (codigo && document.getElementById("bloqueCalculadora").style.display === "none") {
+      calcular();
+    }
+
+  });
+});
+
+</script>
+
+</body>
+</html>
